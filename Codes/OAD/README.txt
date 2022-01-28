@@ -1,0 +1,1 @@
+This macro exports multiple workbench images in ZEN Core with a desired prefix to a user-specified destination

@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Script>
+  <Context>Zen26</Context>
+  <Version>1.0</Version>
+  <Language>Python</Language>
+  <Text>#######################################################
+## EXPORT MULTIPLE IMAGES WITH PREFIX
+##
+## Macro name: ExportMultipleImagesWithPrefix.czmac (ZEN core)
+##
+## Author name: ZSPANIYA@APAC Digital Solutions
+##
+## Required files: workbench with multiple images
+##
+## Required modules: None
+##
+## READ THE WORKBENCH IMAGES, EXPORT THEM TO USER
+## SPECIFIED DESTINATION FOLDER WITH A FILENAME AND PREFIX
+##  
+## Copyright(C) 2020 by Carl Zeiss Microscopy GmbH.
+## Permission is granted to use, modify and distribute this code,
+## as long as this copyright notice remains part of the code.
+## 
+#######################################################
+##
+## Clear the ZEN macro editor
+Zen.Application.MacroEditor.ClearMessages()
+##
+## Import required libraries
+import os
+from System.IO import File, Directory, Path
+##
+## Specify destination folder path
+destpath = r'C:/OAD/Output/CZI Images/'
+## GUI for the application
+GUIDialog = ZenWindow()
+GUIDialog.Initialize('Export Multiple Images with a Prefix')
+## Add components to GUI dialog
+GUIDialog.AddFolderBrowser('destpath','File Name with prefix', destpath)
+GUIDialog.AddDropDown('compressionMethod','Compression Method', ['Compressed','Uncompressed','As Is', 'Force Compressed'],1)
+GUIDialog.AddIntegerRange('compressionQuality', 'Compression Quality', 100, 0, 100)
+GUIDialog.AddCheckbox('BurnInDataZone', 'Burn In DataZone', False)
+GUIDialog.AddCheckbox('BurnInAnnotations', 'Burn In Annotations', False)
+## Show the GUI window
+result = GUIDialog.Show()
+##
+## Show message if the execution is cancelled by the user
+if result.HasCanceled:
+    Zen.Windows.Show('Macro was canceled by user!')
+##    
+## Else perform the macro execution
+else:    
+    ## Get user-defined values
+    destpath = str(result.GetValue('destpath'))
+    compressionMethod = str(result.GetValue('compressionMethod'))
+    compressionQuality = int(result.GetValue('compressionQuality'))
+    ## Get the destination foldername and desired filename
+    destfolder_filename = os.path.split(destpath) 
+    dest_folder = destfolder_filename[0]
+    filename_with_prefix = destfolder_filename[1]
+    filename_no_extension = os.path.splitext(filename_with_prefix)[0]
+    filename_extension = os.path.splitext(filename_with_prefix)[1]
+    ## If the user do not give any file extension, the images will be saved as CZI
+    if filename_extension == '':
+        filename_extension = '.czi'
+    ## Get all workbench images as an array    
+    files=Zen.Application.GetAllOutputParameters()
+    filearray=files.ToArray()
+    ## Get each Workgroup document from the array
+    for img in filearray:
+        image = img.Value
+    ## Loop through each image and save it to the destination folder with the user-specified filename    
+    for icount in range(0, image.Count):   
+        ImgFileName = Path.Combine(dest_folder,filename_no_extension + '-'+ str(icount)+ filename_extension)
+        #print(ImgFileName)
+        image_1 = image[icount] 
+        ## show the exported image
+        Zen.Application.ActiveDocument = image_1
+        ## save the image according to the compression type specified by the user in the GUI
+        if compressionMethod == 'Compressed':
+           image_1.Save(ImgFileName, compressionQuality, ZenSaveCompressionMode.Compressed)
+        elif compressionMethod == 'Uncompressed':
+           image_1.Save(ImgFileName, compressionQuality, ZenSaveCompressionMode.Uncompressed)
+        elif compressionMethod == 'As Is':
+           image_1.Save(ImgFileName, compressionQuality, ZenSaveCompressionMode.AsIs)
+        else:
+           image_1.Save(ImgFileName, compressionQuality, ZenSaveCompressionMode.ForceCompressed)
+    ## show message that macro execution is done        
+    Zen.Windows.Show('Finished saving the images')   
+###########################################################
+
+</Text>
+  <Author></Author>
+  <Description></Description>
+  <Keywords></Keywords>
+  <Row>73</Row>
+  <Column>49</Column>
+</Script>
